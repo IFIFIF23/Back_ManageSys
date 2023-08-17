@@ -9,9 +9,11 @@ import com.lantu.sys.service.IUserService;
 // 这个地方导错包了
 //import kotlin.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,9 @@ import java.util.Map;
 public class UserController {
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/all")
     public Result<List<User>> getAllUser(){
@@ -85,6 +90,7 @@ public class UserController {
 
     @PostMapping("")
     public Result<?> addUSer(@RequestBody User user){
+        user.setPassword(passwordEncoder.encode(user.getPassword()));//密码加密，每次输入123456都会变为一串不同的奇怪字符序列
         userService.save(user);
         return Result.success("新增用户成功");
     }
