@@ -8,12 +8,13 @@ import com.lantu.sys.service.IUserService;
 
 // 这个地方导错包了
 //import kotlin.Result;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.swing.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.Map;
  * @author Yyf
  * @since 2023-05-05
  */
+@Api(tags = {"用户接口列表"})
 @RestController
 @RequestMapping("/user")
 //解决跨域问题  @CrossOrigin  已经单独写了配置文件
@@ -36,12 +38,14 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @ApiOperation("查询用户表接口")
     @GetMapping("/all")
     public Result<List<User>> getAllUser(){
         List<User> list = userService.list();
         return Result.success(list, "查询成功");
     }
 
+    @ApiOperation("登录接口")
     @PostMapping ("/login")
     public Result<Map<String,Object>> login(@RequestBody User user){
         Map<String,Object> data = userService.login(user);

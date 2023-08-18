@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistration
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+//@Configuration
 public class MyInterceptorConfig implements WebMvcConfigurer {
     @Autowired
     private JwtValidateInterceptor jwtValidateInterceptor;  //将拦截器注入
@@ -19,7 +19,11 @@ public class MyInterceptorConfig implements WebMvcConfigurer {
                 .excludePathPatterns(           //除去了登录和退出，防止死循环
                         "/user/login",
                         "/user/info",
-                        "/user/logout"
+                        "/user/logout",
+                        "/error",
+                        "/swagger-ui/**",
+                        "/swagger-resources/**",
+                        "/v3/**"
                 );
     }
 }
