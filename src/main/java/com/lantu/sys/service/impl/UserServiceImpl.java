@@ -2,6 +2,7 @@ package com.lantu.sys.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.lantu.common.utils.JwtUtil;
 import com.lantu.sys.entity.User;
 import com.lantu.sys.mapper.UserMapper;
 import com.lantu.sys.service.IUserService;
@@ -31,6 +32,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private RedisTemplate redisTemplate;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     public Map<String, Object> login(User user) {
@@ -42,17 +45,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //结果不为空，并且密码和传入密码匹配，则生成token给前端（登陆凭证），并将用户信息存入redis
         if(loginUser!=null && passwordEncoder.matches(user.getPassword(), loginUser.getPassword())){
             //暂时用UUID
-            String key = "user:" + UUID.randomUUID();
+            //String key = "user:" + UUID.randomUUID();
 
             //存入redis
             loginUser.setPassword(null);
-            //redisTemplate.opsForValue().set(key, loginUser); //登录有效时长默认永久有效
-            //redisTemplate.opsForValue().set(key, loginUser,10, TimeUnit.SECONDS);
-            redisTemplate.opsForValue().set(key, loginUser,30, TimeUnit.MINUTES);
+            //redisTemplate.opsForValue().set(key, loginUser,30, TimeUnit.MINUTES);
+
+            //用jwt替换uuid和redis
+            String token = jwtUtil.createToken(loginUser);
 
             //返回数据
             Map<String,Object> data = new HashMap<>();
-            data.put("token",key);
+            data.put("token", token);
             return data;
         }
 
@@ -91,9 +95,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Map<String, Object> getUserInfo(String token) {
         //根据token获取用户信息
-        Object obj = redisTemplate.opsForValue().get(token);
-        if(obj != null){
-            User loginUser = JSON.parseObject(JSON.toJSONString(obj), User.class);  //反序列化为一个User对象
+        //Object obj = redisTemplate.opsForValue().get(token);
+        User loginUser = null;
+        try {
+            loginUser = jwtUtil.parseToken(token, User.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if(loginUser != null){
+            //User loginUser = JSON.parseObject(JSON.toJSONString(obj), User.class);  //反序列化为一个User对象(redis用)
             Map<String,Object> data = new HashMap<>();
             data.put("name", loginUser.getPassword());
             data.put("avatar", loginUser.getAvatar());   //头像
@@ -109,7 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public void logout(String token) {
-        redisTemplate.delete(token);
+        //redisTemplate.delete(token);
     }
 
 }
